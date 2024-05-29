@@ -49,8 +49,9 @@ bool bHop = false, bAimbot = false, bEsp = false;
 float dist = 9999.f;
 //uintptr_t viewMatrix = 0x7FF9E8ACEA78;
 HMODULE outModuleBase = GetModuleHandle("client.dll");
-uintptr_t outEntityList = ((uintptr_t)outModuleBase + 0x181C1B8);
-uintptr_t outViewMatrix = ((uintptr_t)outModuleBase + 0x1A052D0);
+uintptr_t outEntityList = ((uintptr_t)outModuleBase + 0x181D248); //update 05/29/2024
+uintptr_t outViewMatrix = ((uintptr_t)outModuleBase + 0x1A06530); //update 05/29/2024
+Vec3* viewAnglesAddy = (Vec3*)((uintptr_t)outModuleBase + 0x1A13688); //update 05/29/2024
 
 namespace globalFuncts
 {
@@ -77,7 +78,7 @@ namespace globalFuncts
 	int getNumPlayers()
 	{
 		uintptr_t modBase = (uintptr_t)GetModuleHandle("server.dll");
-		uintptr_t numPlayers = ((uintptr_t)modBase + 0X13D1F44);
+		uintptr_t numPlayers = ((uintptr_t)modBase + 0x13D4084); //update 05/29/2024
 
 		return *(int*)numPlayers;
 	}
@@ -127,7 +128,7 @@ HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT 
 			pSwapChain->GetDesc(&sd);
 			window = sd.OutputWindow;
 			ID3D11Texture2D* pBackBuffer;
-			pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)& pBackBuffer);
+			pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
 			pDevice->CreateRenderTargetView(pBackBuffer, NULL, &mainRenderTargetView);
 			pBackBuffer->Release();
 			oWndProc = (WNDPROC)SetWindowLongPtr(window, GWLP_WNDPROC, (LONG_PTR)WndProc);
@@ -141,7 +142,7 @@ HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT 
 	ImGui_ImplDX11_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-	
+
 	ImGui::Begin("stro sucks");
 	if (ImGui::Button("Toggle Aimbot"))
 	{
@@ -215,12 +216,12 @@ HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT 
 			ent* lPlayerTest2 = (ent*)*(uintptr_t*)(*(uintptr_t*)outEntityList + 0x8);
 			uint8_t* bytesOrigEnt = (uint8_t*)lPlayerTest1;
 			uint8_t* bytesOrigEnt2 = (uint8_t*)lPlayerTest2;
-			if (static_cast<int>(bytesOrigEnt[0]) == 0x90 && static_cast<int>(bytesOrigEnt[1]) == 0x1A)
+			if (static_cast<int>(bytesOrigEnt[0]) == 0x60 && static_cast<int>(bytesOrigEnt[1]) == 0x29)
 			{
 				lPlayer = lPlayerTest1;
 				outLocalPlayer = lPlayerTest1;
 			}
-			else if (static_cast<int>(bytesOrigEnt2[0]) == 0x90 && static_cast<int>(bytesOrigEnt2[1]) == 0x1A)
+			else if (static_cast<int>(bytesOrigEnt2[0]) == 0x60 && static_cast<int>(bytesOrigEnt2[1]) == 0x29)
 			{
 				lPlayer = lPlayerTest2;
 				outLocalPlayer = lPlayerTest2;
@@ -233,7 +234,7 @@ HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT 
 			if (globalFuncts::processMemoryAddy(bytesNewEnt) != -1) //checking to see if bytes are accessible
 			{
 				std::cout << "init\n";
-				if (static_cast<int>(bytesNewEnt[0]) == 0x90 && static_cast<int>(bytesNewEnt[1]) == 0x1A) //standard for an lPlayerPawn
+				if (static_cast<int>(bytesNewEnt[0]) == 0x60 && static_cast<int>(bytesNewEnt[1]) == 0x29) //standard for an lPlayerPawn
 				{
 					Vec3 entPlayerPos = entity->pos + entity->eyeOrigin;
 					Vec3 lPlayerPos = lPlayer->pos + lPlayer->eyeOrigin;
@@ -272,9 +273,9 @@ HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT 
 			}
 		}
 	}
-	
-		
-				
+
+
+
 	//ESP STUFF END
 
 
@@ -301,7 +302,7 @@ DWORD WINAPI HackThread(HMODULE hMod)
 	{
 		if (kiero::init(kiero::RenderType::D3D11) == kiero::Status::Success)
 		{
-			kiero::bind(8, (void**)& oPresent, hkPresent);
+			kiero::bind(8, (void**)&oPresent, hkPresent);
 			init_hook = true;
 		}
 
@@ -311,16 +312,14 @@ DWORD WINAPI HackThread(HMODULE hMod)
 
 		HMODULE moduleBase = GetModuleHandle("client.dll");
 		std::cout << "Module Base: 0x" << std::uppercase << moduleBase << std::endl;
-		uintptr_t entityList = ((uintptr_t)moduleBase + 0x181C1B8);
+		uintptr_t entityList = ((uintptr_t)moduleBase + 0x181D248);
 		std::cout << "entityList: 0x" << std::uppercase << std::hex << entityList << std::endl;
 		//ent* localPlayer = (ent*)((uintptr_t)moduleBase + 0x1748FE0);
 		ent* localPlayer = (ent*)*(uintptr_t*)(*(uintptr_t*)entityList + 0x8);				//two dereference!!
 		std::cout << "localPlayer: 0x" << std::uppercase << std::hex << outLocalPlayer << std::dec << std::endl;
 		//ent* entity = (ent*)(*(uintptr_t*)entityList + 0x18);
 		//std::cout << "entity1: 0x" << std::uppercase << std::hex << entity << std::dec << std::endl;
-		std::cout << "numPlayers: " << std:: dec << globalFuncts::getNumPlayers() << std::endl;
-
-		Vec3* viewAnglesAddy = (Vec3*)((uintptr_t)moduleBase + 0x1A12498);
+		std::cout << "numPlayers: " << std::dec << globalFuncts::getNumPlayers() << std::endl;
 
 		while (true)
 		{
@@ -358,12 +357,12 @@ DWORD WINAPI HackThread(HMODULE hMod)
 						ent* lPlayerTest2 = (ent*)*(uintptr_t*)(*(uintptr_t*)outEntityList + 0x8);
 						uint8_t* bytesOrigEnt = (uint8_t*)lPlayerTest1;
 						uint8_t* bytesOrigEnt2 = (uint8_t*)lPlayerTest2;
-						if (static_cast<int>(bytesOrigEnt[0]) == 0x90 && static_cast<int>(bytesOrigEnt[1]) == 0x1A)
+						if (static_cast<int>(bytesOrigEnt[0]) == 0x60 && static_cast<int>(bytesOrigEnt[1]) == 0x29)
 						{
 							lPlayer = lPlayerTest1;
 							outLocalPlayer = lPlayerTest1;
 						}
-						else if (static_cast<int>(bytesOrigEnt2[0]) == 0x90 && static_cast<int>(bytesOrigEnt2[1]) == 0x1A)
+						else if (static_cast<int>(bytesOrigEnt2[0]) == 0x60 && static_cast<int>(bytesOrigEnt2[1]) == 0x29)
 						{
 							lPlayer = lPlayerTest2;
 							outLocalPlayer = lPlayerTest2;
@@ -377,7 +376,7 @@ DWORD WINAPI HackThread(HMODULE hMod)
 
 						if (bytesNewEnt != nullptr && globalFuncts::processMemoryAddy(bytesNewEnt) != -1) //checking to see if bytes are accessible
 						{
-							if (static_cast<int>(bytesNewEnt[0]) == 0x90 && static_cast<int>(bytesNewEnt[1]) == 0x1A) //standard for an lPlayerPawn
+							if (static_cast<int>(bytesNewEnt[0]) == 0x60 && static_cast<int>(bytesNewEnt[1]) == 0x29) //standard for an lPlayerPawn
 							{
 								//std::cout << "init\n";
 								std::cout << "pitch: " << viewAnglesAddy->x << ", yaw: " << viewAnglesAddy->y << std::endl;
